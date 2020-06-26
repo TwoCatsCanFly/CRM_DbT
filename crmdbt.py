@@ -1,10 +1,13 @@
 """Customer Relationship Tools on TKInter"""
 
 from tkinter import *
+from tkinter import ttk
 import sqlite3
+import csv
 
 root = Tk()
 root.title('CRM Tool with TKInter')
+root.iconbitmap('icon.ico')
 
 frame_for_database = LabelFrame(root, padx=15, pady=15)
 frame_for_database.grid(row=0, column=0, padx=10, pady=10)
@@ -105,21 +108,22 @@ def submit():
     clear_fields()
 
 def query():
-    conn = sqlite3.connect(d_base)  # create database + connect to it
-    c = conn.cursor()  # create cursor
-    c.execute('SELECT *,oid FROM addresses')
-    records = c.fetchall()# сколько записей взять
-    for id, record in enumerate(records):
-        rid=9+id
-        Label(frame_for_database,text=record).grid(row=rid,column=0)
-    conn.commit()  # commit changes to database
-    conn.close()  # close connection
-def destr_database():
+    conn = sqlite3.connect(d_base)
+    c = conn.cursor()
+    c.execute('SELECT *,oid FROM customers')
+    records = c.fetchall()
+    conn.commit()
+    conn.close()
+    print(records)
+    return records
+
+def destroy_database():
     conn = sqlite3.connect(d_base)  # create database + connect to it
     c = conn.cursor()  # create cursor
     c.execute('DELETE FROM addresses')
     conn.commit()  # commit changes to database
     conn.close()  # close connection
+
 def clear_fields():
     first_name.delete(0,END)
     last_name.delete(0,END)
@@ -136,12 +140,78 @@ def clear_fields():
     discount_code.delete(0,END)
     username.delete(0,END)
 
-frame_for_result = LabelFrame(root,text='Результат', padx=15, pady=15)
-frame_for_result.grid(row=0, column=1, padx=10, pady=10)
+def write_to_csv(result):
+    with open('customers.csv', 'a', newline='') as f: # a -> append
+        w = csv.writer(f, dialect='excel')
+        for records in result:
+            w.writerow(records)
 
+def grab_all_records():
+    conn = sqlite3.connect(d_base)
+    c = conn.cursor()
+    c.execute('SELECT *,oid FROM customers')
+    records = c.fetchall()
+    conn.commit()
+    conn.close()
+    return records
+
+def spreadsheet(window,records):
+    Label(window, text="№").grid(row=1, column=0)
+    for index, x in enumerate(records, 1):
+        num = 1
+        for y in x:
+            Label(window, text=y).grid(row=index + 1, column=num)
+            num += 1
+
+def list_customers():
+    list_customers_query = Tk()
+    list_customers_query.title('Список клиентов')
+    list_customers_query.iconbitmap('icon.ico')
+    records = grab_all_records()
+    spreadsheet(list_customers_query,records)
+    csv_button = Button(list_customers_query, text='Экспорт в CSV', command=lambda: write_to_csv(result))
+    csv_button.grid(row=0,column=0,columnspan=2)
+
+def search_customers():
+    search_customers = Tk()
+    search_customers.title('Поиск клиентов')
+    search_customers.iconbitmap('icon.ico')
+    def search_now():
+        selected = drop.get()
+        param = None
+        if selected == 'Фамилия': param = 'last_name'
+        if selected == 'Имя': param = 'first_name'
+        if selected == 'Эмейл': param = 'email'
+        if selected == 'Телефон': param = 'phone'
+        searched = search_box.get()
+        conn = sqlite3.connect(d_base)
+        c = conn.cursor()
+        c.execute(f'SELECT *,oid FROM customers WHERE {param} LIKE \'%{searched}%\'')
+        records = c.fetchall()
+        conn.commit()
+        conn.close()
+        if not records:
+            records = 'Ничего не найдено'
+        spreadsheet(search_customers,records)
+    search_box = Entry(search_customers)
+    search_box.grid(row=0,column=2,padx=10,pady=10)
+    search_box_label = Label(search_customers, text='Поиск по параметру: ').grid(row=0,column=0,padx=10,pady=10)
+    search_btn = Button(search_customers, text='Поиск',command=search_now).grid(row=0,column=3,padx=10,pady=10)
+    drop = ttk.Combobox(search_customers, value=['Фамилия','Имя','Эмейл','Телефон'])
+    drop.current(0)
+    drop.grid(row=0,column=1,padx=10,pady=10)
+
+
+
+
+
+result = query()
 submit_btn = Button(frame_for_database, text='Внести в базу',command=submit).grid(row=14,column=0,pady=10,padx=10)
-query_btn = Button(frame_for_database, text='Отобразить записи из базы',command=query).grid(row=15,column=0, columnspan =2,pady=10,padx=10)
 clear_btn = Button(frame_for_database, text='Очистить поля',command=clear_fields).grid(row=14,column=1,pady=10,padx=10)
+
+list_customers_btn = Button(frame_for_database, text='Отобразить список всех клиентов',command=list_customers).grid(row=15,column=0,pady=10,padx=10,sticky=W)
+search_for_customers_btn = Button(frame_for_database, text='Поиск',command=search_customers).grid(row=15,column=1,pady=10,padx=10,sticky=W)
+
 
 conn.commit()  #commit changes to database
 conn.close()  #close connection
