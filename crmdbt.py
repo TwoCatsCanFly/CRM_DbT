@@ -5,9 +5,10 @@ from tkinter import ttk
 import sqlite3
 import csv
 
+icon = 'icon.ico'
 root = Tk()
 root.title('CRM Tool with TKInter')
-root.iconbitmap('icon.ico')
+root.iconbitmap(icon)
 
 frame_for_database = LabelFrame(root, padx=15, pady=15)
 frame_for_database.grid(row=0, column=0, padx=10, pady=10)
@@ -159,7 +160,7 @@ def edit_now(id_ref):
 
     edit_customers = Tk()
     edit_customers.title('Поиск клиентов')
-    edit_customers.iconbitmap('icon.ico')
+    edit_customers.iconbitmap(icon)
 
     global first_name_edit
     global last_name_edit
@@ -287,7 +288,9 @@ def spreadsheet(window,records,edit=False):
     clear_position(window, pos_row, pos_column)
     frame_for_result = LabelFrame(window, padx=15, pady=15)
     frame_for_result.grid(row=pos_row, column=pos_column, padx=10, pady=10,columnspan=18)
-    Label(frame_for_result, text="№").grid(row=1, column=0)
+    #Label(frame_for_result, text="№").grid(row=1, column=0)
+
+    
     for index, x in enumerate(records, 1):
         num = 0
         id_reference = x[-1]
@@ -295,13 +298,17 @@ def spreadsheet(window,records,edit=False):
             edit_button = Button(frame_for_result, text='Редактировать', command=lambda id_reference=id_reference: edit_now(id_reference))
             edit_button.grid(row=index + 1, column=19,padx=10)
         for y in x:
+
+
+
+
             Label(frame_for_result, text=y).grid(row=index + 1, column=num)
             num += 1
 
 def list_customers():
     list_customers_query = Tk()
     list_customers_query.title('Список клиентов')
-    list_customers_query.iconbitmap('icon.ico')
+    list_customers_query.iconbitmap(icon)
     records = grab_all_records()
     spreadsheet(list_customers_query,records)
     csv_button = Button(list_customers_query, text='Экспорт в CSV', command=lambda: write_to_csv(result))
@@ -320,7 +327,7 @@ def clear_frame(frame):
 def search_customers():
     search_customers = Tk()
     search_customers.title('Поиск клиентов')
-    search_customers.iconbitmap('icon.ico')
+    search_customers.iconbitmap(icon)
     def search_now():
         selected = drop.get()
         param = None
